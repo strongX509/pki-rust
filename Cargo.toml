@@ -1,0 +1,8 @@
+[package]
+name = "pki"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+getopts = "0.2"
+inventory = "0.3"
