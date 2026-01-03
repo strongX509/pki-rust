@@ -1,7 +1,5 @@
 // Copyright 2026 Andreas Steffen
 //
-// Copyright secunet Security Networks AG
-//
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
 // Free Software Foundation; either version 2 of the License, or (at your
@@ -36,26 +34,55 @@ pub mod pki_self;
 pub mod pki_signcrl;
 pub mod pki_verify;
 
+//
+// Print overview of the top level pki commands
+//
 fn usage()
 {
     println!("usage:");
     println!("  pki command [options]");
     println!("commands:");
+    println!("  --{:7} (-{})  {}", "help", "h", "show usage information");
     for cmd in inventory::iter::<Command> {
-        println!("  --{:7} (-{})  {}", cmd.long, cmd.short, cmd.description);
+        println!("  --{:7} (-{})  {}", cmd.long, cmd.short, cmd.descr);
     }
 }
 
-/// command parsing and execution
+//
+// Print usage text for a particular pki command
+//
+fn cmd_usage(cmd: &Command)
+{
+    println!("usage:");
+    print!("  pki --{} ", cmd.long);
+    let mut first = true;
+    for line in cmd.brief {
+       if first {
+          first = false;
+        } else {
+           print!("{:5}", " ");
+       }
+       println!("{}", line);
+    }
+    println!("options:");
+   for option in cmd.options {
+        println!("  --{:15} (-{})  {}", option.long, option.short, option.descr);
+    }
+}
 
-fn main() -> ExitCode {
+//
+// Parse command line options and execute selected pki command
+//
+fn main() -> ExitCode
+{
     // add all pki main command options
     let mut opts = Options::new();
     opts.optflag("h", "help", "show usage information");
     for cmd in inventory::iter::<Command> {
-        opts.optflag(cmd.short, cmd.long, cmd.description);
+        opts.optflag(cmd.short, cmd.long, cmd.descr);
     }
 
+    // get command line arguments
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
         println!("command missing");
@@ -63,7 +90,9 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let matches = match opts.parse(&args[1..]) {
+    // parse first command line argument only
+    let command_arg = vec![ args[1].clone() ];
+    let matches = match opts.parse(&command_arg) {
         Ok(m)  => { m }
         Err(f) => {
             println!("{}", f.to_string());
@@ -78,11 +107,36 @@ fn main() -> ExitCode {
     }
 
     for cmd in inventory::iter::<Command> {
-        if matches.opt_present(cmd.short) {
-            (cmd.op)();
+        if matches.opt_present(cmd.short)
+        {
+            // add all options for specific pki command
+            let mut cmd_opts = Options::new();
+            for option in cmd.options {
+                if option.arg == 0 {
+                    cmd_opts.optflag(option.short, option.long, option.descr);
+                } else {
+                    cmd_opts.optopt(option.short, option.long, option.descr, "");
+                }
+            }
+
+            // parse command line arguments for specific pki command
+            let cmd_matches = match cmd_opts.parse(&args[2..]) {
+                Ok(m)  => { m }
+                Err(f) => {
+                    println!("{}", f.to_string());
+                    cmd_usage(cmd);
+                    return  ExitCode::FAILURE;
+                }
+            };
+
+            if cmd_matches.opt_present("h") {
+                cmd_usage(cmd);
+            } else {
+               (cmd.op)();
+            }
             break;
         }
     }
 
-    return ExitCode::SUCCESS;
+   return ExitCode::SUCCESS;
 }
