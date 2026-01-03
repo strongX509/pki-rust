@@ -13,16 +13,54 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Print a single keyid in the requested format.
 //
-pub fn pki_keyid() -> i32
+pub fn pki_keyid(matches: &Matches) -> ExitCode
 {
+    let file = match matches.opt_str("i") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --in {}", file);
+
+    let keyid = match matches.opt_str("x") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --keyid {}", keyid);
+
+    if !file.is_empty() && !keyid.is_empty() {
+        println!("options '--in' and '--keyid' can't be set both");
+        return ExitCode::SUCCESS;
+    }
+
+    if file.is_empty() && keyid.is_empty() {
+        println!("option '--in' or '--keyid' missing: get input from stdin");
+    }
+
+    if matches.opt_present("t") {
+        let in_type = matches.opt_str("t").unwrap();
+        println!("option: --type {}", in_type);
+    }
+
+    if matches.opt_present("I") {
+        let id_type = matches.opt_str("I").unwrap();
+        println!("option: --id {}", id_type);
+    }
+
+    if matches.opt_present("f") {
+        let format = matches.opt_str("f").unwrap();
+        println!("option: --format {}", format);
+    }
+
     println!("keyid()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //

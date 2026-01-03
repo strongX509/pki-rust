@@ -13,16 +13,129 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Sign a CRL.
 //
-pub fn pki_signcrl() -> i32
+pub fn pki_signcrl(matches: &Matches) -> ExitCode
 {
+  let cacert = match matches.opt_str("c") {
+        Some(v) => { v }
+        None => {
+            println!("option '--cacert' is required");
+            return ExitCode::from(2);
+        }
+    };
+    println!("option: --cacert {}", cacert);
+
+    let cakey = match matches.opt_str("k") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --cakey {}", cakey);
+
+    let cakeyid = match matches.opt_str("x") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --cakeyid {}", cakeyid);
+
+    if cakey.is_empty() && cakeyid.is_empty() {
+       println!("option '--cakey' or '--cakeyid' is required");
+        return ExitCode::from(2);
+    }
+
+    if !cakey.is_empty() && !cakeyid.is_empty() {
+        println!("options '--cakey' and '--cakeyid' can't be set both");
+        return ExitCode::from(2);
+    }
+
+    if matches.opt_present("l") {
+        let lifetime = matches.opt_str("l").unwrap();
+        println!("option: --lifetime {}", lifetime);
+    }
+
+    if matches.opt_present("F") {
+        let datetu = matches.opt_str("F").unwrap();
+        println!("option: --this-update {}", datetu);
+    }
+
+    if matches.opt_present("T") {
+        let datenu = matches.opt_str("T").unwrap();
+        println!("option: --next-update {}", datenu);
+    }
+
+    if matches.opt_present("D") {
+        let dateform = matches.opt_str("D").unwrap();
+        println!("option: --dateform {}", dateform);
+    }
+
+    if matches.opt_present("a") {
+        let last_crl = matches.opt_str("a").unwrap();
+        println!("option: --lastcrl {}", last_crl);
+    }
+
+    if matches.opt_present("b") {
+        let base_crl = matches.opt_str("b").unwrap();
+        println!("option: --basecrl {}", base_crl);
+    }
+
+    let crl_uris: Vec<String> = matches.opt_strs("u");
+    for u in &crl_uris
+    {
+        println!("option: --crl {}", u);
+    }
+
+    let certs: Vec<String> = matches.opt_strs("z");
+    for c in &certs
+    {
+        println!("option: --cert {}", c);
+    }
+
+    let serial: Vec<String> = matches.opt_strs("s");
+    for s in &serial
+    {
+        println!("option: --serlal {}", s);
+    }
+
+    let reason: Vec<String> = matches.opt_strs("r");
+    for r in &reason
+    {
+        println!("option: --reason {}", r);
+    }
+
+    let date: Vec<String> = matches.opt_strs("d");
+    for d in &date
+    {
+        println!("option: --date {}", d);
+    }
+
+    if matches.opt_present("X") {
+        let critical_extension_oid = matches.opt_str("X").unwrap();
+        println!("option: --critical {}", critical_extension_oid);
+    }
+
+    if matches.opt_present("g") {
+        let digest = matches.opt_str("g").unwrap();
+        println!("option: --digest {}", digest);
+    }
+
+    if matches.opt_present("R") {
+        let padding = matches.opt_str("R").unwrap();
+        println!("option: --rsa-padding {}", padding);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("f").unwrap();
+        println!("option: --outform {}", form);
+    }
+
     println!("signcrl()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //
@@ -32,6 +145,7 @@ inventory::submit!
 {
     let brief: &'static[&'static str] = &[
         "--cacert file --cakey file|--cakeyid hex [--lifetime days]",
+        "[--this-update datetime] [--next-update datetime] [--dateform form]",
         "[--lastcrl crl] [--basecrl crl] [--crluri uri]+",
         "[[--reason key-compromise|ca-compromise|affiliation-changed|",
         "           superseded|cessation-of-operation|certificate-hold]",
@@ -50,11 +164,11 @@ inventory::submit!
         Opt { long: "dateform",    short: "D", arg: 1, descr: "strptime(3) input format, default: %d.%m.%y %T" },
         Opt { long: "lastcrl",     short: "a", arg: 1, descr: "CRL of lastUpdate to copy revocations from" },
         Opt { long: "basecrl",     short: "b", arg: 1, descr: "base CRL to create a delta CRL for" },
-        Opt { long: "crluri",      short: "u", arg: 1, descr: "freshest delta CRL URI to include" },
-        Opt { long: "cert",        short: "z", arg: 1, descr: "certificate file to revoke" },
-        Opt { long: "serial",      short: "s", arg: 1, descr: "hex encoded certificate serial number to revoke" },
-        Opt { long: "reason",      short: "r", arg: 1, descr: "reason for certificate revocation" },
-        Opt { long: "date",        short: "d", arg: 1, descr: "revocation date as unix timestamp, default: now" },
+        Opt { long: "crluri",      short: "u", arg: 2, descr: "freshest delta CRL URI to include" },
+        Opt { long: "cert",        short: "z", arg: 2, descr: "certificate file to revoke" },
+        Opt { long: "serial",      short: "s", arg: 2, descr: "hex encoded certificate serial number to revoke" },
+        Opt { long: "reason",      short: "r", arg: 2, descr: "reason for certificate revocation" },
+        Opt { long: "date",        short: "d", arg: 2, descr: "revocation date as unix timestamp, default: now" },
         Opt { long: "digest",      short: "g", arg: 1, descr: "digest for signature creation, default: key-specific" },
         Opt { long: "rsa-padding", short: "R", arg: 1, descr: "padding for RSA signatures, default: pkcs1" },
         Opt { long: "critical",    short: "X", arg: 1, descr: "critical extension OID to include for test purposes" },

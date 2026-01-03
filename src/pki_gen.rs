@@ -13,16 +13,33 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Generate a private key.
 //
-pub fn pki_gen() -> i32
+pub fn pki_gen(matches: &Matches) -> ExitCode
 {
+    if matches.opt_present("t") {
+        let key_type = matches.opt_str("t").unwrap();
+        println!("option: --type {}", key_type);
+    }
+
+    if matches.opt_present("s") {
+        let size = matches.opt_str("s").unwrap();
+        println!("option: --size {}", size);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("f").unwrap();
+        println!("option: --outform {}", form);
+    }
+
     println!("gen()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //
@@ -38,9 +55,6 @@ inventory::submit!
         Opt { long: "help",        short: "h", arg: 0, descr: "show usage information" },
         Opt { long: "type",        short: "t", arg: 1, descr: "type of key, default: rsa" },
         Opt { long: "size",        short: "s", arg: 1, descr: "keylength in bits, default: rsa 2048, ecdsa 384" },
-        Opt { long: "safe-primes", short: "p", arg: 0, descr: "generate rsa safe primes" },
-        Opt { long: "shares",      short: "n", arg: 1, descr: "number of private rsa key shares" },
-        Opt { long: "threshold",   short: "l", arg: 1, descr: "minimum number of participating rsa key shares" },
         Opt { long: "outform",     short: "f", arg: 1, descr: "encoding of generated private key, default: der" },
     ];
     Command::new(pki_gen, "g", "gen",

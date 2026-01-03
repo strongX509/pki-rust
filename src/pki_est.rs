@@ -12,16 +12,116 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Enroll an X.509 certificate with an EST server (RFC 7030).
 //
-pub fn pki_est() -> i32
+pub fn pki_est(matches: &Matches) -> ExitCode
 {
+    let url = match matches.opt_str("u") {
+        Some(v) => { v }
+        None => {
+            println!("option '--url' is required");
+            return ExitCode::from(2);
+        }
+    };
+    println!("option: --url {}", url);
+
+    let cacerts: Vec<String> = matches.opt_strs("C");
+    for c in &cacerts {
+         println!("option: --cacert {}", c);
+    }
+    if cacerts.len() == 0 {
+        println!("option '--cacert' is required");
+        return ExitCode::from(2);
+    }
+
+    let client_cert_file = match matches.opt_str("c") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --cert {}", client_cert_file);
+
+    let certid = match matches.opt_str("X") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --certid {}", certid);
+
+    let client_key_file = match matches.opt_str("k") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --key {}", client_key_file);
+
+    let keyid = match matches.opt_str("x") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --keyid {}", keyid);
+
+    if (!client_cert_file.is_empty() || !certid.is_empty()) &&
+       (client_key_file.is_empty() && keyid.is_empty())
+    {
+        println!("'--key' or '--keyid' is required if '--cert' or '--certid' is set");
+        return ExitCode::from(2);
+    }
+
+    if (!client_key_file.is_empty() || !keyid.is_empty()) &&
+       (client_cert_file.is_empty() && certid.is_empty())
+    {
+        println!("'--cert' or '--certid' is required if '--key' or '--keyid' is set");
+        return ExitCode::from(2);
+    }
+
+    if !client_key_file.is_empty() && !keyid.is_empty() {
+        println!("options '--key' and '--keyid' can't be set both");
+        return ExitCode::from(2);
+    }
+
+    if !client_cert_file.is_empty() && !certid.is_empty() {
+        println!("options '--cert' and '--certid' can't be set both");
+        return ExitCode::from(2);
+    }
+
+    if matches.opt_present("l") {
+        let label = matches.opt_str("l").unwrap();
+        println!("option: --label {}", label);
+    }
+
+    if matches.opt_present("i") {
+        let file = matches.opt_str("i").unwrap();
+        println!("option: --in {}", file);
+    } else {
+        println!("option '--in' missing: get input from stdin");
+    }
+
+    if matches.opt_present("p") {
+        let user_pass = matches.opt_str("p").unwrap();
+        println!("option: --userpass {}", user_pass);
+    }
+
+    if matches.opt_present("t") {
+        let poll_interval = matches.opt_str("t").unwrap();
+        println!("option: --interval {}", poll_interval);
+    }
+
+    if matches.opt_present("m") {
+        let max_poll_time = matches.opt_str("m").unwrap();
+        println!("option: --maxpolltime {}", max_poll_time);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("m").unwrap();
+        println!("option: --outform {}", form);
+    }
+
     println!("est()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //
@@ -30,7 +130,7 @@ pub fn pki_est() -> i32
 inventory::submit!
 {
     let brief: &'static[&'static str] = &[
-        "--url url [--label label] [--in file] --cacert file",
+        "--url url [--label label] [--in file] --cacert file+",
         "[--cert file|--certid hex --key file|--keyid hex]",
         "[--userpass username:password] [--interval time]",
         "[--maxpolltime time] [--outform der|pem]"
@@ -40,7 +140,7 @@ inventory::submit!
         Opt { long: "url",         short: "u", arg: 1, descr: "URL of the EST server" },
         Opt { long: "label",       short: "l", arg: 1, descr: "label in the EST server path" },
         Opt { long: "in",          short: "i", arg: 1, descr: "PKCS#10 input file, default: stdin" },
-        Opt { long: "cacert",      short: "C", arg: 1, descr: "CA certificate(s)" },
+        Opt { long: "cacert",      short: "C", arg: 2, descr: "CA certificate(s)" },
         Opt { long: "cert",        short: "c", arg: 1, descr: "old certificate about to be renewed" },
         Opt { long: "certid",      short: "X", arg: 1, descr: "smartcard or TPM certificate object handle"  },
         Opt { long: "key",         short: "k", arg: 1, descr: "old private key about to be replaced" },

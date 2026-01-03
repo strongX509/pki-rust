@@ -13,16 +13,91 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Create a self-signed PKCS#10 certificate request..
 //
-pub fn pki_req() -> i32
+pub fn pki_req(matches: &Matches) -> ExitCode
 {
+   let file = match matches.opt_str("i") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --in {}", file);
+
+    let keyid = match matches.opt_str("x") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --keyid {}", keyid);
+
+    if !file.is_empty() && !keyid.is_empty() {
+        println!("options '--in' and '--keyid' can't be set both");
+        return ExitCode::SUCCESS;
+    }
+
+    if file.is_empty() && keyid.is_empty() {
+        println!("option '--in' or '--keyid' missing: get input from stdin");
+    }
+
+    if matches.opt_present("t") {
+        let in_type = matches.opt_str("t").unwrap();
+        println!("option: --type {}", in_type);
+    }
+
+    if matches.opt_present("o") {
+        let oldreq = matches.opt_str("o").unwrap();
+        println!("option: --oldreq {}", oldreq);
+    }
+
+    if matches.opt_present("d") {
+        let dn = matches.opt_str("d").unwrap();
+        println!("option: --dn {}", dn);
+    }
+
+    let san: Vec<String> = matches.opt_strs("a");
+    for s in &san
+    {
+        println!("option: --san {}", s);
+    }
+
+    let flags: Vec<String> = matches.opt_strs("e");
+    for f in &flags
+     {
+            println!("option: --flag {}", f);
+    }
+
+    if matches.opt_present("P") {
+        let profile = matches.opt_str("P").unwrap();
+        println!("option: --profile {}", profile);
+    }
+
+    if matches.opt_present("p") {
+        let password = matches.opt_str("p").unwrap();
+        println!("option: --password {}", password);
+    }
+
+    if matches.opt_present("g") {
+        let digest = matches.opt_str("g").unwrap();
+        println!("option: --digest {}", digest);
+    }
+
+    if matches.opt_present("R") {
+        let padding = matches.opt_str("R").unwrap();
+        println!("option: --rsa-padding {}", padding);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("f").unwrap();
+        println!("option: --outform {}", form);
+    }
+
     println!("req()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //
@@ -45,8 +120,8 @@ inventory::submit!
         Opt { long: "type",        short: "t", arg: 1, descr: "type of input key, default: priv" },
         Opt { long: "oldreq",      short: "o", arg: 1, descr: "old certificate request to be used as a template" },
         Opt { long: "dn",          short: "d", arg: 1, descr: "subject distinguished name" },
-        Opt { long: "san",         short: "a", arg: 1, descr: "subjectAltName to include in cert request" },
-        Opt { long: "flag",        short: "e", arg: 1, descr: "include extendedKeyUsage flag" },
+        Opt { long: "san",         short: "a", arg: 2, descr: "subjectAltName to include in cert request" },
+        Opt { long: "flag",        short: "e", arg: 2, descr: "include extendedKeyUsage flag" },
         Opt { long: "profile",     short: "P", arg: 1, descr: "certificate profile name to include in cert request" },
         Opt { long: "password",    short: "p", arg: 1, descr: "challengePassword to include in cert request" },
         Opt { long: "digest",      short: "g", arg: 1, descr: "digest for signature creation, default: key-specific" },

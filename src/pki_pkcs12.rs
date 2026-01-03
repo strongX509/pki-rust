@@ -13,16 +13,38 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Show info about PKCS#12 container.
 //
-pub fn pki_pkcs12() -> i32
+pub fn pki_pkcs12(matches: &Matches) -> ExitCode
 {
+    if matches.opt_present("i") {
+        let file = matches.opt_str("i").unwrap();
+        println!("option: --in {}", file);
+    } else {
+        println!("option '--in' missing: get input from stdin");
+    }
+
+    let list: bool = matches.opt_present("l");
+    println!("list: {}", list);
+
+    if matches.opt_present("e") {
+        let export = matches.opt_str("e").unwrap();
+        println!("option: --export {}", export);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("f").unwrap();
+        println!("option: --outform {}", form);
+    }
+
     println!("pkcs12()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //

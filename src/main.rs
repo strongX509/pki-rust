@@ -97,7 +97,7 @@ fn main() -> ExitCode
         Err(f) => {
             println!("{}", f.to_string());
             usage();
-            return  ExitCode::FAILURE;
+            return ExitCode::FAILURE;
         }
     };
 
@@ -114,8 +114,10 @@ fn main() -> ExitCode
             for option in cmd.options {
                 if option.arg == 0 {
                     cmd_opts.optflag(option.short, option.long, option.descr);
-                } else {
+                } else if option.arg == 1 {
                     cmd_opts.optopt(option.short, option.long, option.descr, "");
+                } else {
+                    cmd_opts.optmulti(option.short, option.long, option.descr, "");
                 }
             }
 
@@ -131,12 +133,17 @@ fn main() -> ExitCode
 
             if cmd_matches.opt_present("h") {
                 cmd_usage(cmd);
+                return ExitCode::SUCCESS;
             } else {
-               (cmd.op)();
+                let ret = (cmd.op)(&cmd_matches);
+                if ret == ExitCode::from(2) {
+                    cmd_usage(cmd);
+                    return  ExitCode::FAILURE;
+               }
+               return ret;
             }
-            break;
         }
     }
 
-   return ExitCode::SUCCESS;
+    return ExitCode::FAILURE;
 }

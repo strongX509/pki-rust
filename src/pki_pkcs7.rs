@@ -13,16 +13,62 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Wrap/Unwrap PKCs#7 containers.
 //
-pub fn pki_pkcs7() -> i32
+pub fn pki_pkcs7(matches: &Matches) -> ExitCode
 {
+    if matches.opt_present("i") {
+        let file = matches.opt_str("i").unwrap();
+        println!("option: --in {}", file);
+    } else {
+        println!("option '--in' missing: get input from stdin");
+    }
+
+    let sign: bool = matches.opt_present("s");
+    println!("sign:    {}", sign);
+
+    let verify: bool = matches.opt_present("u");
+    println!("verify:  {}", verify);
+
+    let encrypt: bool = matches.opt_present("e");
+    println!("encrypt: {}", encrypt);
+
+    let decrypt: bool = matches.opt_present("d");
+    println!("decrypt: {}", decrypt);
+
+    let show: bool = matches.opt_present("p");
+    println!("show:    {}", show);
+
+    let key = match matches.opt_str("k") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --key {}", key);
+
+    let cert = match matches.opt_str("c") {
+        Some(v) => { v }
+        None => { "".to_string() }
+    };
+    println!("option: --cert {}", cert);
+
+    if matches.opt_present("g") {
+        let digest = matches.opt_str("g").unwrap();
+        println!("option: --digest {}", digest);
+    }
+
+    if matches.opt_present("R") {
+        let padding = matches.opt_str("R").unwrap();
+        println!("option: --rsa-padding {}", padding);
+    }
+
     println!("pkcs7()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //

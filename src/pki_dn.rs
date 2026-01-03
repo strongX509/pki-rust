@@ -13,16 +13,30 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Extract subject DN.
 //
-pub fn pki_dn() -> i32
+pub fn pki_dn(matches: &Matches) -> ExitCode
 {
+    if matches.opt_present("i") {
+        let file = matches.opt_str("i").unwrap();
+        println!("option: --in {}", file);
+    } else {
+        println!("option '--in' missing: get input from stdin");
+    }
+
+    if matches.opt_present("f") {
+        let format = matches.opt_str("f").unwrap();
+        println!("option: --format {}", format);
+    }
+
     println!("dn()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //

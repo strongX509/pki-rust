@@ -10,14 +10,17 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
-type Op = fn() -> i32;
+use std::process::ExitCode;
+use getopts::Matches;
+
+type Op = fn(&Matches) -> ExitCode;
 
 pub struct Opt {
 	/// long option string
 	pub long: &'static str,
 	/// short option character
 	pub short: &'static str,
-	/// expected argument to option, no/req/opt_argument
+	/// expected argument to option, no/req/multi argument
 	pub arg: u32,
 	/// description of the option
 	pub descr: &'static str,

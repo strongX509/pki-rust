@@ -14,16 +14,44 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Get CA certificate[s] from a SCEP server (RFC 8894).
 //
-pub fn pki_scepca() -> i32
+pub fn pki_scepca(matches: &Matches) -> ExitCode
 {
+    if matches.opt_present("u") {
+        let url = matches.opt_str("u").unwrap();
+        println!("option: --url {}", url);
+    } else {
+        println!("option '--url' is required");
+        return ExitCode::from(2);
+    }
+
+    if matches.opt_present("c") {
+        let caout = matches.opt_str("c").unwrap();
+        println!("option: --caout {}", caout);
+    }
+
+    if matches.opt_present("r") {
+        let raout = matches.opt_str("r").unwrap();
+        println!("option: --raout {}", raout);
+    }
+
+    if matches.opt_present("f") {
+        let form = matches.opt_str("f").unwrap();
+        println!("option: --outform {}", form);
+    }
+
+    let force: bool = matches.opt_present("F");
+    println!("force:  {}", force);
+
     println!("scepca()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //

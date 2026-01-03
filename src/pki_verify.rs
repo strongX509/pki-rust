@@ -14,16 +14,42 @@
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 
+use std::process::ExitCode;
+use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
 //
 // Verify a certificate signature.
 //
-pub fn pki_verify() -> i32
+pub fn pki_verify(matches: &Matches) -> ExitCode
 {
+    let cacerts: Vec<String> = matches.opt_strs("c");
+    for c in &cacerts {
+         println!("option: --cacert {}", c);
+    }
+    if cacerts.len() == 0 {
+        println!("option '--cacert' is required");
+        return ExitCode::from(2);
+    }
+
+    let crls: Vec<String> = matches.opt_strs("l");
+    for c in &crls {
+         println!("option: --crl {}", c);
+    }
+
+    if matches.opt_present("i") {
+        let file = matches.opt_str("i").unwrap();
+        println!("option: --in {}", file);
+    } else {
+        println!("option '--in' missing: get input from stdin");
+    }
+
+    let online: bool = matches.opt_present("o");
+    println!("online: {}", online);
+
     println!("verify()");
-    return 0;
+    return ExitCode::SUCCESS;
 }
 
 //
@@ -37,8 +63,8 @@ inventory::submit!
     let options: &'static[Opt] = &[
         Opt { long: "help",   short: "h", arg: 0, descr: "show usage information" },
         Opt { long: "in",     short: "i", arg: 1, descr: "X.509 certificate to verify, default: stdin" },
-        Opt { long: "cacert", short: "c", arg: 1, descr: "CA certificate(s) for trustchain verification" },
-        Opt { long: "crl",    short: "l", arg: 1, descr: "CRL for trustchain verification" },
+        Opt { long: "cacert", short: "c", arg: 2, descr: "CA certificate(s) for trustchain verification" },
+        Opt { long: "crl",    short: "l", arg: 2, descr: "CRL(s) for trustchain verification" },
         Opt { long: "online", short: "o", arg: 0, descr: "enable online CRL/OCSP revocation checking" },
     ];
     Command::new(pki_verify, "v", "verify",
