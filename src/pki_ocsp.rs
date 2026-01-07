@@ -72,10 +72,11 @@ pub fn pki_ocsp(matches: &Matches) -> ExitCode
         println!("option: --rsa-padding {}", padding);
     }
 
-    if matches.opt_present("l") {
-        let lifetime = matches.opt_str("l").unwrap();
-        println!("option: --lifetime {}", lifetime);
-    }
+    let lifetime: i64 = 60 * match matches.opt_str("l") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 0 } // minutes
+    };
+    println!("option: --lifetime {} seconds", lifetime);
 
     println!("ocsp()");
     return ExitCode::SUCCESS;

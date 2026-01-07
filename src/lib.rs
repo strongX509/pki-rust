@@ -13,6 +13,8 @@
 use std::process::ExitCode;
 use getopts::Matches;
 
+pub const X509_NO_CONSTRAINT: u32 = 255;
+
 type Op = fn(&Matches) -> ExitCode;
 
 pub struct Opt {

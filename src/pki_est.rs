@@ -17,6 +17,8 @@ use getopts::Matches;
 use pki::Command;
 use pki::Opt;
 
+const DEFAULT_POLL_INTERVAL: u32 = 60; // seconds
+
 //
 // Enroll an X.509 certificate with an EST server (RFC 7030).
 //
@@ -105,15 +107,17 @@ pub fn pki_est(matches: &Matches) -> ExitCode
         println!("option: --userpass {}", user_pass);
     }
 
-    if matches.opt_present("t") {
-        let poll_interval = matches.opt_str("t").unwrap();
-        println!("option: --interval {}", poll_interval);
-    }
+    let poll_interval: u32 = match matches.opt_str("t") {
+        Some(string) => { string.parse().unwrap() }
+        None => { DEFAULT_POLL_INTERVAL } // seconds
+    };
+    println!("option: --interval {} seconds", poll_interval);
 
-    if matches.opt_present("m") {
-        let max_poll_time = matches.opt_str("m").unwrap();
-        println!("option: --maxpolltime {}", max_poll_time);
-    }
+    let max_poll_time: u32 = match matches.opt_str("m") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 0 } // seconds
+    };
+    println!("option: --maxpolltime {} seconds", max_poll_time);
 
     if matches.opt_present("f") {
         let form = matches.opt_str("m").unwrap();

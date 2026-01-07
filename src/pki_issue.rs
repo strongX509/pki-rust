@@ -17,6 +17,7 @@ use std::process::ExitCode;
 use getopts::Matches;
 use pki::Command;
 use pki::Opt;
+use pki::X509_NO_CONSTRAINT;
 
 //
 // Issue a certificate using a CA certificate and key.
@@ -77,10 +78,11 @@ pub fn pki_issue(matches: &Matches) -> ExitCode
         println!("option: --san {}", s);
     }
 
-    if matches.opt_present("l") {
-        let lifetime = matches.opt_str("l").unwrap();
-        println!("option: --lifetime {}", lifetime);
-    }
+    let lifetime: i64 = 24 * 60 * 60 * match matches.opt_str("l") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 1095 } // days
+    };
+    println!("option: --lifetime {} seconds", lifetime);
 
     if matches.opt_present("F") {
         let datenb = matches.opt_str("F").unwrap();
@@ -105,10 +107,11 @@ pub fn pki_issue(matches: &Matches) -> ExitCode
     let ca: bool = matches.opt_present("b");
     println!("ca flag:  {}", ca);
 
-    if matches.opt_present("p") {
-        let pathlen = matches.opt_str("p").unwrap();
-        println!("option: --pathlen {}", pathlen);
-    }
+    let pathlen: u32 = match matches.opt_str("p") {
+        Some(string) => { string.parse().unwrap() }
+        None => { X509_NO_CONSTRAINT }
+    };
+    println!("option: --pathlen {}", pathlen);
 
     let flags: Vec<String> = matches.opt_strs("e");
     for f in &flags
@@ -158,20 +161,23 @@ pub fn pki_issue(matches: &Matches) -> ExitCode
         println!("option: --policy-mapping {}", m);
     }
 
-    if matches.opt_present("E") {
-        let require_explicit = matches.opt_str("E").unwrap();
-        println!("option: --policy-explicit {}", require_explicit);
-    }
+    let require_explicit: u32 = match matches.opt_str("E") {
+        Some(string) => { string.parse().unwrap() }
+        None => { X509_NO_CONSTRAINT }
+     };
+    println!("option: --policy-explicit {}", require_explicit);
 
-    if matches.opt_present("H") {
-        let inhibit_mapping = matches.opt_str("H").unwrap();
-        println!("option: --policy-inhibit {}", inhibit_mapping);
-    }
+    let inhibit_mapping: u32 = match matches.opt_str("H") {
+        Some(string) => { string.parse().unwrap() }
+        None => { X509_NO_CONSTRAINT }
+     };
+    println!("option: --policy-inhibit {}", inhibit_mapping);
 
-    if matches.opt_present("A") {
-        let inhibit_any = matches.opt_str("A").unwrap();
-        println!("option: --policy-any {}", inhibit_any);
-    }
+    let inhibit_any: u32 = match matches.opt_str("A") {
+        Some(string) => { string.parse().unwrap() }
+        None => { X509_NO_CONSTRAINT }
+     };
+    println!("option: --policy-any {}", inhibit_any);
 
     let policies: Vec<String> = matches.opt_strs("P");
     for p in &policies

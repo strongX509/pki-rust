@@ -54,10 +54,11 @@ pub fn pki_signcrl(matches: &Matches) -> ExitCode
         return ExitCode::from(2);
     }
 
-    if matches.opt_present("l") {
-        let lifetime = matches.opt_str("l").unwrap();
-        println!("option: --lifetime {}", lifetime);
-    }
+    let lifetime: i64 = 24 * 60 * 60 * match matches.opt_str("l") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 15 } // days
+    };
+    println!("option: --lifetime {} seconds", lifetime);
 
     if matches.opt_present("F") {
         let datetu = matches.opt_str("F").unwrap();

@@ -28,10 +28,11 @@ pub fn pki_gen(matches: &Matches) -> ExitCode
         println!("option: --type {}", key_type);
     }
 
-    if matches.opt_present("s") {
-        let size = matches.opt_str("s").unwrap();
-        println!("option: --size {}", size);
-    }
+    let size: u32 = match matches.opt_str("s") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 0 } // bits
+    };
+    println!("option: --size {} bits", size);
 
     if matches.opt_present("f") {
         let form = matches.opt_str("f").unwrap();

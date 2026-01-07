@@ -72,10 +72,11 @@ pub fn pki_acert(matches: &Matches) -> ExitCode
         println!("option: --serial {}", serial);
     }
 
-    if matches.opt_present("l") {
-        let lifetime = matches.opt_str("l").unwrap();
-        println!("option: --lifetime {}", lifetime);
-    }
+    let lifetime: i64 = 60 * 60 * match matches.opt_str("l") {
+        Some(string) => { string.parse().unwrap() }
+        None => { 24 } // hours
+    };
+    println!("option: --lifetime {} seconds", lifetime);
 
     if matches.opt_present("F") {
         let datenb = matches.opt_str("F").unwrap();
