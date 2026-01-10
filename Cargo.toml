@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 getopts = "0.2"
 inventory = "0.3"
+chrono = "0.4"

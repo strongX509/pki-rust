@@ -15,6 +15,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
+use chrono::{DateTime, Utc};
 use pki::{Command, Opt};
 
 //
@@ -59,20 +60,39 @@ pub fn pki_signcrl(matches: &Matches) -> ExitCode
     };
     println!("option: --lifetime {} seconds", lifetime);
 
-    if matches.opt_present("F") {
-        let datetu = matches.opt_str("F").unwrap();
-        println!("option: --this-update {}", datetu);
-    }
+    let dateform = match matches.opt_str("D") {
+        Some(v) => { v }
+        None => { "%Y-%m-%dT%H:%M:%S%z".to_string() }
+    };
+    println!("option: --dateform {}", dateform);
 
-    if matches.opt_present("T") {
-        let datenu = matches.opt_str("T").unwrap();
-        println!("option: --next-update {}", datenu);
-    }
+    let datetu: i64 = match matches.opt_str("F") {
+        Some(v) => {
+            match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
+                Ok(dt) => { dt.timestamp() }
+                Err(e) => {
+                    println!("{e}");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+        None => { Utc::now().timestamp() }
+    };
+    println!("option: --this-update {}", datetu);
 
-    if matches.opt_present("D") {
-        let dateform = matches.opt_str("D").unwrap();
-        println!("option: --dateform {}", dateform);
-    }
+    let datenu: i64 = match matches.opt_str("T") {
+        Some(v) => {
+            match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
+                Ok(dt) => { dt.timestamp() }
+                Err(e) => {
+                    println!("{e}");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+        None => { datetu + lifetime }
+    };
+    println!("option: --next-update {}", datenu);
 
     if matches.opt_present("a") {
         let last_crl = matches.opt_str("a").unwrap();

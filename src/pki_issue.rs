@@ -15,6 +15,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
+use chrono::{DateTime, Utc};
 use pki::{Command, Opt};
 use pki::X509_NO_CONSTRAINT;
 
@@ -83,20 +84,39 @@ pub fn pki_issue(matches: &Matches) -> ExitCode
     };
     println!("option: --lifetime {} seconds", lifetime);
 
-    if matches.opt_present("F") {
-        let datenb = matches.opt_str("F").unwrap();
-        println!("option: --not-before {}", datenb);
-    }
+    let dateform = match matches.opt_str("D") {
+        Some(v) => { v }
+        None => { "%Y-%m-%dT%H:%M:%S%z".to_string() }
+    };
+    println!("option: --dateform {}", dateform);
 
-    if matches.opt_present("T") {
-        let datena = matches.opt_str("T").unwrap();
-        println!("option: --not-after {}", datena);
-    }
+    let datenb: i64 = match matches.opt_str("F") {
+        Some(v) => {
+            match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
+                Ok(dt) => { dt.timestamp() }
+                Err(e) => {
+                    println!("{e}");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+        None => { Utc::now().timestamp() }
+    };
+    println!("option: --not-before {}", datenb);
 
-    if matches.opt_present("D") {
-        let dateform = matches.opt_str("D").unwrap();
-        println!("option: --dateform {}", dateform);
-    }
+    let datena: i64 = match matches.opt_str("T") {
+        Some(v) => {
+            match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
+                Ok(dt) => { dt.timestamp() }
+                Err(e) => {
+                    println!("{e}");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+        None => { datenb + lifetime }
+    };
+    println!("option: --not-after  {}", datena);
 
     if matches.opt_present("s") {
         let serial = matches.opt_str("s").unwrap();
