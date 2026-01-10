@@ -15,8 +15,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
-use pki::Command;
-use pki::Opt;
+use pki::{Command, Opt};
 
 //
 // Print a credential in a human readable form.

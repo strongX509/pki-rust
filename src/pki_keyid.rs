@@ -15,8 +15,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
-use pki::Command;
-use pki::Opt;
+use pki::{Command, Opt};
 
 //
 // Print a single keyid in the requested format.

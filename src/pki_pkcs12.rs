@@ -15,8 +15,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
-use pki::Command;
-use pki::Opt;
+use pki::{Command, Opt};
 
 //
 // Show info about PKCS#12 container.

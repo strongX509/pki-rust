@@ -16,8 +16,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
-use pki::Command;
-use pki::Opt;
+use pki::{Command, Opt};
 
 //
 // Get CA certificate[s] from a SCEP server (RFC 8894).

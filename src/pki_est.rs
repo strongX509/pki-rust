@@ -14,8 +14,7 @@
 
 use std::process::ExitCode;
 use getopts::Matches;
-use pki::Command;
-use pki::Opt;
+use pki::{Command, Opt};
 
 const DEFAULT_POLL_INTERVAL: u32 = 60; // seconds
 
