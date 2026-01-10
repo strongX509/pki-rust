@@ -17,7 +17,7 @@ use std::process::ExitCode;
 use getopts::Matches;
 use chrono::{DateTime, Utc};
 use pki::{Command, Opt};
-use pki::X509_NO_CONSTRAINT;
+use pki::strongswan::x509::{X509Flag, X509_NO_CONSTRAINT};
 
 //
 // Issue a certificate using a CA certificate and key.
@@ -123,20 +123,53 @@ pub fn pki_issue(matches: &Matches) -> ExitCode
         println!("option: --serial {}", serial);
     }
 
-    let ca: bool = matches.opt_present("b");
-    println!("ca flag:  {}", ca);
-
     let pathlen: u32 = match matches.opt_str("p") {
         Some(string) => { string.parse().unwrap() }
         None => { X509_NO_CONSTRAINT }
     };
     println!("option: --pathlen {}", pathlen);
 
+    let mut x509_flags = X509Flag::NONE;
+
+    if matches.opt_present("b")
+    {
+        println!("option: --ca");
+        x509_flags |= X509Flag::CA;
+    }
+
     let flags: Vec<String> = matches.opt_strs("e");
     for f in &flags
-     {
-            println!("option: --flag {}", f);
+    {
+        println!("option: --flag {}", f);
+        if f == "serverAuth" {
+            x509_flags |= X509Flag::SERVER_AUTH;
+        }
+        else if f == "clientAuth"
+        {
+            x509_flags |= X509Flag::CLIENT_AUTH;
+        }
+        else if f == "ikeIntermediate"
+        {
+            x509_flags |= X509Flag::IKE_INTERMEDIATE;
+        }
+        else if f == "crlSign"
+        {
+            x509_flags |= X509Flag::CRL_SIGN;
+        }
+        else if f == "ocspSigning"
+        {
+            x509_flags |= X509Flag::OCSP_SIGNER;
+        }
+        else if f == "msSmartcardLogon"
+        {
+            x509_flags |= X509Flag::MS_SMARTCARD_LOGON;
+        }
+        else {
+            println!("unknown --flag {}", f);
+            return ExitCode::from(2);
+        }
     }
+    println!("x509_flags: 0b{:0>11b}", x509_flags.bits());
 
     let crl_uris: Vec<String> = matches.opt_strs("u");
     for u in &crl_uris
