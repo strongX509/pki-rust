@@ -16,7 +16,7 @@
 use std::process::ExitCode;
 use getopts::Matches;
 use pki::{Command, Opt};
-use pki::strongswan::keys::KeyType;
+use pki::strongswan::creds::keys::KeyType;
 
 //
 // Create a self-signed PKCS#10 certificate request..

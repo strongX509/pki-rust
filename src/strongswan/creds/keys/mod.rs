@@ -1,3 +1,4 @@
+#[derive(Debug)]
 /// type of a key pair, the used crypto system
 pub enum KeyType {
     /// key type wildcard

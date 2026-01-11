@@ -16,6 +16,9 @@
 use std::process::ExitCode;
 use getopts::Matches;
 use pki::{Command, Opt};
+use pki::strongswan::creds::CredType;
+use pki::strongswan::creds::keys::KeyType;
+use pki::strongswan::creds::certs::CertType;
 
 //
 // Print a single keyid in the requested format.
@@ -43,10 +46,44 @@ pub fn pki_keyid(matches: &Matches) -> ExitCode
         println!("option '--in' or '--keyid' missing: get input from stdin");
     }
 
-    if matches.opt_present("t") {
-        let in_type = matches.opt_str("t").unwrap();
-        println!("option: --type {}", in_type);
-    }
+    let mut key_type = KeyType::ANY;
+    let mut cert_type = CertType::ANY;
+    let cred_type = match matches.opt_str("t") {
+        Some(t) => {
+            if t == "rsa" || t == "rsa-priv" {
+                key_type = KeyType::RSA;
+                CredType::PrivateKey
+            }
+            else if t == "ecdsa" || t == "ecdsa-priv" {
+                key_type = KeyType::ECDSA;
+                CredType::PrivateKey
+            }
+            else if t == "priv" {
+                key_type = KeyType::ANY;
+                CredType::PrivateKey
+            }
+            else if t == "pub" {
+                key_type = KeyType::ANY;
+                CredType::PublicKey
+            }
+            else if t == "pkcs10" {
+                cert_type =CertType::PKCS10Request;
+                CredType::Certificate
+            }
+            else if t == "x509" {
+                cert_type = CertType::X509;
+                CredType::Certificate
+            } else {
+                println!("invalid input type");
+                return ExitCode::from(2);
+            }
+        }
+        None => {
+            key_type = KeyType::RSA;
+            CredType::PrivateKey
+        }
+    };
+    println!("option: --type {:?} - {:?} or {:?}", cred_type, key_type, cert_type);
 
     if matches.opt_present("I") {
         let id_type = matches.opt_str("I").unwrap();

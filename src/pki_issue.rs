@@ -17,7 +17,7 @@ use std::process::ExitCode;
 use getopts::Matches;
 use chrono::{DateTime, Utc};
 use pki::{Command, Opt};
-use pki::strongswan::x509::{X509Flag, X509_NO_CONSTRAINT};
+use pki::strongswan::creds::certs::x509::{X509Flag, X509_NO_CONSTRAINT};
 
 //
 // Issue a certificate using a CA certificate and key.
