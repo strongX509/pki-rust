@@ -17,30 +17,30 @@ pub mod strongswan;
 
 type Op = fn(&Matches) -> ExitCode;
 
-pub struct Opt {
-	/// long option string
-	pub long: &'static str,
-	/// short option character
-	pub short: &'static str,
-	/// expected argument to option, no/req/multi argument
-	pub arg: u32,
-	/// description of the option
-	pub descr: &'static str,
+    pub struct Opt {
+    /// long option string
+    pub long: &'static str,
+    /// short option character
+    pub short: &'static str,
+    /// expected argument to option, no/req/multi argument
+    pub arg: u32,
+    /// description of the option
+    pub descr: &'static str,
 }
 
 pub struct Command {
-	/// function implementing the command
-	pub op: Op,
-	/// short option character
-	pub short: &'static str,
-	/// long option string
-	pub long: &'static str,
-	/// description of the command
-	pub descr: &'static str,
-	/// usage summary of the command
-	pub brief: &'static[&'static str],
-	// list of options the command accepts
-	pub options: &'static[Opt]
+    /// function implementing the command
+    pub op: Op,
+    /// short option character
+    pub short: &'static str,
+    /// long option string
+    pub long: &'static str,
+    /// description of the command
+    pub descr: &'static str,
+    /// usage summary of the command
+    pub brief: &'static[&'static str],
+    // list of options the command accepts
+    pub options: &'static[Opt]
 }
 
 impl Command {
