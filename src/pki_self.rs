@@ -17,19 +17,23 @@ use std::process::ExitCode;
 use getopts::Matches;
 use chrono::{DateTime, Utc};
 use pki::{Command, Opt};
-use pki::strongswan::x509::{X509Flag, X509_NO_CONSTRAINT};
+use pki::strongswan::creds::{CredType, Builder};
+use pki::strongswan::creds::certs::CertType;
+use pki::strongswan::creds::certs::x509::{X509Flag, X509_NO_CONSTRAINT};
 
 //
 // Create a self signed certificate.
 //
 pub fn pki_self(matches: &Matches) -> ExitCode
 {
+   // --in
    let file = match matches.opt_str("i") {
         Some(v) => { v }
         None => { "".to_string() }
     };
     println!("option: --in {}", file);
 
+    // --keyid
     let keyid = match matches.opt_str("x") {
         Some(v) => { v }
         None => { "".to_string() }
@@ -40,51 +44,56 @@ pub fn pki_self(matches: &Matches) -> ExitCode
         println!("options '--in' and '--keyid' can't be set both");
         return ExitCode::SUCCESS;
     }
-
     if file.is_empty() && keyid.is_empty() {
         println!("option '--in' or '--keyid' missing: get input from stdin");
     }
 
+    // --type
     if matches.opt_present("t") {
         let in_type = matches.opt_str("t").unwrap();
         println!("option: --type {}", in_type);
     }
 
+    // --dn
     if matches.opt_present("d") {
         let dn = matches.opt_str("d").unwrap();
         println!("option: --dn {}", dn);
     }
 
+    // --san
     let san: Vec<String> = matches.opt_strs("a");
     for s in &san
     {
         println!("option: --san {}", s);
     }
 
+    // --lifetime
     let lifetime: i64 = 24 * 60 * 60 * match matches.opt_str("l") {
         Some(string) => { string.parse().unwrap() }
         None => { 1095 } // days
     };
-    println!("option: --lifetime {} seconds", lifetime);
 
+    // --serial
     if matches.opt_present("s") {
         let serial = matches.opt_str("s").unwrap();
         println!("option: --serial {}", serial);
     }
 
+    // --pathlen
     let pathlen: u32 = match matches.opt_str("p") {
         Some(string) => { string.parse().unwrap() }
         None => { X509_NO_CONSTRAINT }
     };
     println!("option: --pathlen {}", pathlen);
 
+    // --dateform
     let dateform = match matches.opt_str("D") {
         Some(v) => { v }
         None => { "%Y-%m-%dT%H:%M:%S%z".to_string() }
     };
-    println!("option: --dateform {}", dateform);
 
-    let datenb: i64 = match matches.opt_str("F") {
+    // ---not-before
+    let not_before: i64 = match matches.opt_str("F") {
         Some(v) => {
             match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
                 Ok(dt) => { dt.timestamp() }
@@ -96,9 +105,9 @@ pub fn pki_self(matches: &Matches) -> ExitCode
         }
         None => { Utc::now().timestamp() }
     };
-    println!("option: --not-before {}", datenb);
 
-    let datena: i64 = match matches.opt_str("T") {
+    // --not-after
+    let not_after: i64 = match matches.opt_str("T") {
         Some(v) => {
             match DateTime::parse_from_str(v.as_str(), dateform.as_str()) {
                 Ok(dt) => { dt.timestamp() }
@@ -108,22 +117,20 @@ pub fn pki_self(matches: &Matches) -> ExitCode
                 }
             }
         }
-        None => { datenb + lifetime }
+        None => { not_before + lifetime }
     };
-    println!("option: --not-after  {}", datena);
 
     let mut x509_flags = X509Flag::NONE;
 
     if matches.opt_present("b")
     {
-        println!("option: --ca");
         x509_flags |= X509Flag::CA;
     }
 
+    // --flag
     let flags: Vec<String> = matches.opt_strs("e");
     for f in &flags
     {
-        println!("option: --flag {}", f);
         if f == "serverAuth" {
             x509_flags |= X509Flag::SERVER_AUTH;
         }
@@ -152,96 +159,116 @@ pub fn pki_self(matches: &Matches) -> ExitCode
             return ExitCode::from(2);
         }
     }
-    println!("x509_flags: 0b{:0>11b}", x509_flags.bits());
 
+    // --ocsp
     let ocsp_uris: Vec<String> = matches.opt_strs("o");
-    for u in &ocsp_uris
-    {
-        println!("option: --ocsp {}", u);
-    }
 
+    // addrblock
     let addrblocks: Vec<String> = matches.opt_strs("B");
     for b in &addrblocks
     {
          println!("option: --addrblock {}", b);
     }
 
+    // --nc-permitted
     let permitted: Vec<String> = matches.opt_strs("n");
     for nc in &permitted
     {
         println!("option: --nc-permitted {}", nc);
     }
 
+    // --nc-excluded
     let excluded: Vec<String> = matches.opt_strs("N");
     for nc in &excluded
     {
         println!("option: --nc-excluded {}", nc);
     }
 
+    // --policy-mapping
     let mappings: Vec<String> = matches.opt_strs("M");
     for m in &mappings
     {
         println!("option: --policy-mapping {}", m);
     }
 
+    // --policy-explicit
     let require_explicit: u32 = match matches.opt_str("E") {
         Some(string) => { string.parse().unwrap() }
         None => { X509_NO_CONSTRAINT }
      };
     println!("option: --policy-explicit {}", require_explicit);
 
+    // --policy-inhibit
     let inhibit_mapping: u32 = match matches.opt_str("H") {
         Some(string) => { string.parse().unwrap() }
         None => { X509_NO_CONSTRAINT }
      };
     println!("option: --policy-inhibit {}", inhibit_mapping);
 
+    // --policy_any
     let inhibit_any: u32 = match matches.opt_str("A") {
         Some(string) => { string.parse().unwrap() }
         None => { X509_NO_CONSTRAINT }
      };
     println!("option: --policy-any {}", inhibit_any);
 
+    // --cert-policy
     let policies: Vec<String> = matches.opt_strs("P");
     for p in &policies
     {
         println!("option: --cert-policy {}", p);
     }
 
+    // --cps-uri
     let cps_uri: Vec<String> = matches.opt_strs("C");
     for u in &cps_uri
     {
         println!("option: --cps-uri {}", u);
     }
 
+    // --user-notice
     let user_notice: Vec<String> = matches.opt_strs("U");
     for n in &user_notice
     {
         println!("option: --user-notice {}", n);
     }
 
+    // --critical
     if matches.opt_present("X") {
         let critical_extension_oid = matches.opt_str("X").unwrap();
         println!("option: --critical {}", critical_extension_oid);
     }
 
+    // --digest
     if matches.opt_present("g") {
         let digest = matches.opt_str("g").unwrap();
         println!("option: --digest {}", digest);
     }
 
+    // --rsa-padding
     if matches.opt_present("R") {
         let padding = matches.opt_str("R").unwrap();
         println!("option: --rsa-padding {}", padding);
     }
 
+    // --outform
     if matches.opt_present("f") {
         let form = matches.opt_str("f").unwrap();
         println!("option: --outform {}", form);
     }
 
     println!("self()");
-    return ExitCode::SUCCESS;
+    let builder = Builder::new(&CredType::Certificate{cert_type: CertType::X509})
+        .x509_flags(Some(x509_flags))
+        .not_before(Some(not_before))
+        .not_after(Some(not_after))
+        .ocsp_uris(Some(&ocsp_uris));
+
+    if builder.build() {
+        return ExitCode::SUCCESS;
+    } else {
+        return ExitCode::FAILURE;
+    }
 }
 
 //

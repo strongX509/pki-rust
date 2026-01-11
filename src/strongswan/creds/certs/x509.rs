@@ -3,6 +3,7 @@ use bitflags::bitflags;
 pub const X509_NO_CONSTRAINT: u32 = 255;
 
 bitflags! {
+#[derive(PartialEq)]
     /// X.509 certificate flags
     pub struct X509Flag: u32 {
         /// cert has no constraints

@@ -16,50 +16,78 @@
 use std::process::ExitCode;
 use getopts::Matches;
 use pki::{Command, Opt};
+use pki::strongswan::creds::{CredType, Builder};
+use pki::strongswan::creds::keys::KeyType;
+use pki::strongswan::creds::certs::CertType;
 
 //
 // Print a single keyid in the requested format.
 //
 pub fn pki_keyid(matches: &Matches) -> ExitCode
 {
-    let file = match matches.opt_str("i") {
-        Some(v) => { v }
-        None => { "".to_string() }
-    };
-    println!("option: --in {}", file);
+    // --in
+    let file  = matches.opt_str("i");
+    // option --keyid
+    let keyid = matches.opt_str("x");
 
-    let keyid = match matches.opt_str("x") {
-        Some(v) => { v }
-        None => { "".to_string() }
-    };
-    println!("option: --keyid {}", keyid);
-
-    if !file.is_empty() && !keyid.is_empty() {
+    if file != None && keyid != None {
         println!("options '--in' and '--keyid' can't be set both");
-        return ExitCode::SUCCESS;
+        return ExitCode::from(2);
+    }
+    if file == None && keyid == None {
+        println!("option '--in' and '--keyid' missing: get input from stdin");
     }
 
-    if file.is_empty() && keyid.is_empty() {
-        println!("option '--in' or '--keyid' missing: get input from stdin");
-    }
+    // --type
+    let cred_type = match matches.opt_str("t") {
+        Some(t) => {
+            if t == "rsa" || t == "rsa-priv" {
+                CredType::PrivateKey{ key_type: KeyType::RSA }
+            }
+            else if t == "ecdsa" || t == "ecdsa-priv" {
+                CredType::PrivateKey{ key_type: KeyType::ECDSA }
+            }
+            else if t == "priv" {
+                CredType::PrivateKey{ key_type: KeyType::ANY }
+            }
+            else if t == "pub" {
+                CredType::PublicKey{ key_type: KeyType::ANY }
+            }
+            else if t == "pkcs10" {
+                CredType::Certificate{ cert_type: CertType::PKCS10Request }
+            }
+            else if t == "x509" {
+                CredType::Certificate{ cert_type: CertType::X509 }
+            } else {
+                println!("invalid input type");
+                return ExitCode::from(2);
+            }
+        }
+        None => CredType::PrivateKey{ key_type: KeyType::RSA }
+    };
 
-    if matches.opt_present("t") {
-        let in_type = matches.opt_str("t").unwrap();
-        println!("option: --type {}", in_type);
-    }
-
+    // --id
     if matches.opt_present("I") {
         let id_type = matches.opt_str("I").unwrap();
         println!("option: --id {}", id_type);
     }
 
+    // --format
     if matches.opt_present("f") {
         let format = matches.opt_str("f").unwrap();
         println!("option: --format {}", format);
     }
 
     println!("keyid()");
-    return ExitCode::SUCCESS;
+    let builder = Builder::new(&cred_type)
+        .file(file)
+        .keyid(keyid);
+
+    if builder.build() {
+        return ExitCode::SUCCESS;
+    } else {
+        return ExitCode::FAILURE;
+    }
 }
 
 //
