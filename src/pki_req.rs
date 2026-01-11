@@ -16,6 +16,7 @@
 use std::process::ExitCode;
 use getopts::Matches;
 use pki::{Command, Opt};
+use pki::strongswan::keys::KeyType;
 
 //
 // Create a self-signed PKCS#10 certificate request..
@@ -43,10 +44,22 @@ pub fn pki_req(matches: &Matches) -> ExitCode
         println!("option '--in' or '--keyid' missing: get input from stdin");
     }
 
-    if matches.opt_present("t") {
-        let in_type = matches.opt_str("t").unwrap();
-        println!("option: --type {}", in_type);
-    }
+    let in_type = match matches.opt_str("t") {
+        Some(t) => {
+            if t == "rsa" {
+                KeyType::RSA
+            } else if t == "ecdsa" {
+                KeyType::ECDSA
+            } else if t == "priv" {
+                KeyType::ANY
+            } else {
+                println!("invalid input type");
+                return ExitCode::from(2);
+            }
+        }
+        None => { KeyType::RSA }
+    };
+    println!("option: --type {:?}", in_type);
 
     if matches.opt_present("o") {
         let oldreq = matches.opt_str("o").unwrap();

@@ -16,16 +16,31 @@
 use std::process::ExitCode;
 use getopts::Matches;
 use pki::{Command, Opt};
+use pki::strongswan::keys::KeyType;
 
 //
 // Generate a private key.
 //
 pub fn pki_gen(matches: &Matches) -> ExitCode
 {
-    if matches.opt_present("t") {
-        let key_type = matches.opt_str("t").unwrap();
-        println!("option: --type {}", key_type);
-    }
+    let key_type = match matches.opt_str("t") {
+        Some(t) => {
+            if t == "rsa" {
+                KeyType::RSA
+            } else if t == "ecdsa" {
+                KeyType::ECDSA
+            } else if t == "ed25519" {
+                KeyType::ED25519
+            } else if t == "ed448" {
+                KeyType::ED448
+            } else {
+                println!("invalid key type");
+                return ExitCode::from(2);
+            }
+        }
+        None => { KeyType::RSA }
+    };
+    println!("option: --type {:?}", key_type);
 
     let size: u32 = match matches.opt_str("s") {
         Some(string) => { string.parse().unwrap() }
